@@ -1,0 +1,47 @@
+{
+  "type": "record",
+  "name": "SensorRecord",
+  "namespace": "com.nurse.stress.prediction",
+  "fields": [
+    {
+      "name": "X",
+      "type": ["null", "float"],
+      "default": null
+    },
+    {
+      "name": "Y",
+      "type": ["null", "float"],
+      "default": null
+    },
+    {
+      "name": "Z",
+      "type": ["null", "float"],
+      "default": null
+    },
+    {
+      "name": "EDA",
+      "type": ["null", "float"],
+      "default": null
+    },
+    {
+      "name": "HR",
+      "type": ["null", "float"],
+      "default": null
+    },
+    {
+      "name": "TEMP",
+      "type": ["null", "float"],
+      "default": null
+    },
+    {
+      "name": "id",
+      "type": ["null", "string"],
+      "default": null
+    },
+    {
+      "name": "datetime",
+      "type": ["null", "string"],
+      "default": null
+    }
+  ]
+}

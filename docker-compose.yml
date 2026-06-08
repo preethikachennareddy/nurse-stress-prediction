@@ -1,0 +1,170 @@
+version: "3.8"
+
+services:
+  # -----------------------------
+  # FLINK + METRICS STACK
+  # -----------------------------
+  jobmanager:
+    image: flink:1.19
+    hostname: jobmanager
+    ports:
+      - "8081:8081"
+    command: jobmanager
+    networks:
+      - app-net
+
+  taskmanager:
+    image: flink:1.19
+    hostname: taskmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        taskmanager.numberOfTaskSlots: 2
+        jobmanager.rpc.address: jobmanager
+    command: taskmanager
+    depends_on:
+      - jobmanager
+    networks:
+      - app-net
+
+  influxdb:
+    image: influxdb:1.8
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB=flink_sink
+    networks:
+      - app-net
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    depends_on:
+      - influxdb
+    networks:
+      - app-net
+
+  # -----------------------------
+  # KAFKA STACK (ZooKeeper + Kafka + Tools)
+  # -----------------------------
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.0.1
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    restart: unless-stopped
+    networks:
+      - app-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.0.1
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    restart: unless-stopped
+    networks:
+      - app-net
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: kafka-ui
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    restart: unless-stopped
+    networks:
+      - app-net
+
+  create-topic:
+    image: confluentinc/cp-kafka:7.0.1
+    container_name: create-topic
+    depends_on:
+      - kafka
+    volumes:
+      - ./data/create_topic.sh:/create_topic.sh
+    entrypoint: [ "bash", "/create_topic.sh" ]
+    restart: "no"
+    networks:
+      - app-net
+
+  csv-producer:
+    build:
+      context: ./data
+      dockerfile: Dockerfile.producer
+    container_name: csv-producer
+    depends_on:
+      - kafka
+    volumes:
+      - ./data:/data:ro
+    environment:
+      TOPIC: stress-topic
+      KAFKA_BOOTSTRAP: kafka:9092
+      PRODUCER_LOOP: "true"
+    restart: unless-stopped
+    networks:
+      - app-net
+
+  stress-prediction-service:
+    build:
+      context: ./flask-predictor
+    ports:
+      - "8000:5000"
+    restart: always
+    networks:
+      - app-net
+
+#  flink-job:
+#    build:
+#      context: ./flink-stress-data-processor
+#      dockerfile: Dockerfile
+#    networks:
+#      - app-net
+#    restart: "no"
+#    command: [ "sleep", "infinity" ]
+
+  # -----------------------------
+  # DASK FALLBACK PROCESSOR
+  # -----------------------------
+  dask-fallback:
+    build:
+      context: ./dask-fallback
+      dockerfile: Dockerfile
+    container_name: dask-fallback
+    depends_on:
+      - kafka
+      - influxdb
+      - stress-prediction-service
+    volumes:
+      - ./data/nurse_sensor_event.avsc:/data/nurse_sensor_event.avsc:ro
+      - ./dask-fallback/config.yaml:/app/config.yaml:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - app-net
+
+
+volumes:
+  grafana-storage:
+    driver: local
+
+networks:
+  app-net:
+    driver: bridge

@@ -1,0 +1,274 @@
+{
+  "dashboard": {
+    "title": "Nurse Stress Monitoring - Dual Source (Flink + Dask)",
+    "tags": ["stress", "monitoring", "flink", "dask"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Stress Levels by Processing Source",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "targets": [
+          {
+            "refId": "A",
+            "query": "SELECT mean(\"stress_level\") FROM \"nurse_stress\" WHERE $timeFilter GROUP BY time(1m), source fill(null)",
+            "rawQuery": true,
+            "resultFormat": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 10
+            },
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          },
+          "overrides": [
+            {
+              "matcher": { "id": "byName", "options": "nurse_stress.mean {source: flink}" },
+              "properties": [
+                { "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } },
+                { "id": "displayName", "value": "Flink (Primary)" }
+              ]
+            },
+            {
+              "matcher": { "id": "byName", "options": "nurse_stress.mean {source: dask-fallback}" },
+              "properties": [
+                { "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } },
+                { "id": "displayName", "value": "Dask (Fallback)" }
+              ]
+            }
+          ]
+        },
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "multi"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Fallback Status",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+        "targets": [
+          {
+            "refId": "A",
+            "query": "SELECT COUNT(\"stress_level\") FROM \"nurse_stress\" WHERE source='dask-fallback' AND time > now() - 5m",
+            "rawQuery": true
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "green" },
+                { "value": 1, "color": "orange" }
+              ]
+            },
+            "mappings": [
+              {
+                "type": "value",
+                "options": {
+                  "0": { "text": "Normal (Flink Only)", "color": "green" }
+                }
+              },
+              {
+                "type": "range",
+                "options": {
+                  "from": 1,
+                  "to": 999999,
+                  "result": { "text": "Fallback Active", "color": "orange" }
+                }
+              }
+            ]
+          }
+        },
+        "options": {
+          "textMode": "value_and_name",
+          "colorMode": "background"
+        }
+      },
+      {
+        "id": 3,
+        "title": "Records Processed by Source",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 12, "y": 4 },
+        "targets": [
+          {
+            "refId": "A",
+            "query": "SELECT COUNT(\"stress_level\") FROM \"nurse_stress\" WHERE $timeFilter GROUP BY source",
+            "rawQuery": true
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        },
+        "options": {
+          "textMode": "value_and_name",
+          "orientation": "horizontal"
+        }
+      },
+      {
+        "id": 4,
+        "title": "Stress Levels by Nurse (All Sources Combined)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+        "targets": [
+          {
+            "refId": "A",
+            "query": "SELECT mean(\"stress_level\") FROM \"nurse_stress\" WHERE $timeFilter GROUP BY time(1m), id fill(null)",
+            "rawQuery": true,
+            "resultFormat": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 0
+            },
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short",
+            "min": 0,
+            "max": 2
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "showLegend": true,
+            "calcs": ["lastNotNull", "mean"]
+          },
+          "tooltip": {
+            "mode": "multi"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Heart Rate by Nurse",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+        "targets": [
+          {
+            "refId": "A",
+            "query": "SELECT mean(\"HR\") FROM \"nurse_stress\" WHERE $timeFilter GROUP BY time(1m), id fill(null)",
+            "rawQuery": true,
+            "resultFormat": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth"
+            },
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "bpm"
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "showLegend": true
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Temperature by Nurse",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+        "targets": [
+          {
+            "refId": "A",
+            "query": "SELECT mean(\"TEMP\") FROM \"nurse_stress\" WHERE $timeFilter GROUP BY time(1m), id fill(null)",
+            "rawQuery": true,
+            "resultFormat": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth"
+            },
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "celsius"
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Processing Latency Indicator",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+        "targets": [
+          {
+            "refId": "A",
+            "query": "SELECT COUNT(\"stress_level\") FROM \"nurse_stress\" WHERE $timeFilter GROUP BY time(1m), source fill(0)",
+            "rawQuery": true,
+            "resultFormat": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "bars",
+              "fillOpacity": 80,
+              "stacking": {
+                "mode": "normal"
+              }
+            },
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        },
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          }
+        }
+      }
+    ],
+    "refresh": "5s",
+    "time": {
+      "from": "now-15m",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
+    }
+  }
+}

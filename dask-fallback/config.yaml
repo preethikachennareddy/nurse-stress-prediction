@@ -1,0 +1,34 @@
+# Dask Fallback Configuration
+kafka:
+  bootstrap_servers: "kafka:9092"
+  topic: "stress-topic"
+  group_id: "dask-fallback-consumer"
+  auto_offset_reset: "latest"  # Start from latest checkpoint
+  enable_auto_commit: true
+  auto_commit_interval_ms: 5000
+
+processing:
+  batch_size: 1000  # Larger batch size for Dask (vs 60 for Spark)
+  batch_timeout_seconds: 30  # Max wait time to accumulate batch
+  checkpoint_interval: 10  # Save checkpoint every N batches
+  
+monitoring:
+  latency_threshold_seconds: 300  # 5 minutes - trigger fallback if exceeded
+  consecutive_violations: 3  # N consecutive windows before switching
+  check_interval_seconds: 60  # How often to check Flink/Spark health
+  
+ml_service:
+  endpoint: "http://stress-prediction-service:5000/model/api/predict"
+  timeout_seconds: 10
+  retry_attempts: 3
+  
+influxdb:
+  url: "http://influxdb:8086"
+  database: "flink_sink"
+  measurement: "nurse_stress"
+  
+dask:
+  scheduler_address: null  # null = local mode, or "dask-scheduler:8786" for distributed
+  n_workers: 2
+  threads_per_worker: 2
+  memory_limit: "2GB"

@@ -1,0 +1,32 @@
+# Ignore Jupyter checkpoint files
+.ipynb_checkpoints/
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore local virtual environments
+env/
+venv/
+.venv/
+
+# Ignore downloaded datasets & large files
+*.csv
+*.tsv
+*.json
+*.parquet
+*.zip
+
+# Ignore trained model artifacts
+*.joblib
+*.pkl
+*.h5
+
+# Ignore logs
+*.log
+
+# Ignore OS files
+.DS_Store
+Thumbs.db

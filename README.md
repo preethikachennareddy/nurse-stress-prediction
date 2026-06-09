@@ -208,11 +208,9 @@ cd dask-fallback && ./test_fallback.sh
 ├── flink-stress-data-processor   # Flink job code
 ├── grafana_dashboard_json        # exported JSON for Grafana dashboards
 ├── ml_model                      # model training code and .joblib model files
+├── README.md                     
 ├── docker-compose.yml
 ├── requirements.txt
-├── streamlit_dashboard.py        # Streamlit demo dashboard
-└── README.md
-```
+└── streamlit_dashboard.py        # Streamlit demo dashboard
 
-**Branch:** `main`
-**Created:** November 2025
+```

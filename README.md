@@ -1,11 +1,20 @@
 # Stress Prediction Pipeline: Real-Time Kafka
-
+ 
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.32-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
+[![Kafka](https://img.shields.io/badge/Apache%20Kafka-3.x-231F20?logo=apachekafka&logoColor=white)](https://kafka.apache.org)
+[![Flink](https://img.shields.io/badge/Apache%20Flink-1.x-E6526F?logo=apacheflink&logoColor=white)](https://flink.apache.org)
+[![LightGBM](https://img.shields.io/badge/LightGBM-model-2E86AB?logo=python&logoColor=white)](https://lightgbm.readthedocs.io)
+[![Flask](https://img.shields.io/badge/Flask-API-000000?logo=flask&logoColor=white)](https://flask.palletsprojects.com)
+ 
+### [View Live Demo](https://nurse-stress-prediction-preethika.streamlit.app)
+ 
 A containerized Kafka streaming pipeline for processing worker stress data in real-time. Integrates with Java-based Flink for ML inference.
-
+ 
 ## Live Demo
-
+ 
 [https://nurse-stress-prediction-preethika.streamlit.app](https://nurse-stress-prediction-preethika.streamlit.app)
-
+ 
 Interactive dashboard showing real-time stress predictions from the LightGBM and GradientBoosting models side by side.
 
 ## Architecture
